@@ -8,6 +8,7 @@ import {
     USERS_DATA_STATE_CHANGE,
     USERS_POSTS_STATE_CHANGE,
     USERS_LIKES_STATE_CHANGE,
+    USERS_COMMENTS_STATE_CHANGE,
     CLEAR_DATA
 } from '../constants'
 
@@ -60,7 +61,6 @@ export function fetchUsersFollowing() {
             .collection('userFollowing')
             .onSnapshot((snapshot) => {
                 let following = snapshot.docs.map(doc => {
-
                     const id = doc.id
                     return id
                 })
@@ -117,6 +117,7 @@ export function fetchUsersFollowingPosts(uid) {
 
                 for (let i = 0; i < posts.length; i++) {
                     dispatch(fetchUsersFollowingLikes(uid, posts[i].id))
+                    dispatch(fetchUsersFollowingComments(uid, posts[i].id))
                 }
                 dispatch({ type: USERS_POSTS_STATE_CHANGE, posts, uid })
             })
@@ -142,6 +143,29 @@ export function fetchUsersFollowingLikes(uid, postId) {
                     currentUserLike = true
                 }
                 dispatch({ type: USERS_LIKES_STATE_CHANGE, postId, currentUserLike })
+            })
+    }
+}
+
+export function fetchUsersFollowingComments(uid, postId) {
+    return (dispatch, getState) => {
+        firebase.firestore()
+            .collection("post")
+            .doc(uid)
+            .collection('userPost')
+            .doc(postId)
+            .collection("comments")
+            .doc(firebase.auth().currentUser.uid)
+            .onSnapshot((snapshot) => {
+                let postId = null
+                if (snapshot._delegate._document){
+                    postId = snapshot._delegate._document.key.path.segments[3];
+                }
+                let currentUserComent = false
+                if (snapshot.exists) {
+                    currentUserComent = true
+                }
+                dispatch({ type: USERS_COMMENTS_STATE_CHANGE, postId, currentUserComent })
             })
     }
 }

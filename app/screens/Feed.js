@@ -1,11 +1,13 @@
 import React, { useState, useEffect } from 'react'
-import { View, Text, Image, FlatList, StyleSheet, Button } from 'react-native'
+import { View, Text, Image, FlatList, StyleSheet, SafeAreaView, ScrollView } from 'react-native'
 import { connect } from 'react-redux'
 import firebase from 'firebase'
+import { Avatar, Button, Card, Caption, FAB, Portal, Provider } from 'react-native-paper'
 require('firebase/firestore')
 
 function Feed(props) {
     const [posts, setPosts] = useState([])
+    const [state, setState] = useState({ open: false });
 
     useEffect(() => {
         if (props.usersFollowingLoaded == props.following.length && props.following.length !== 0) {
@@ -38,43 +40,54 @@ function Feed(props) {
             .doc(firebase.auth().currentUser.uid)
             .delete()
     }
-    return (
-        <View style={styles.container}>
 
-            <View style={styles.containerGallery}>
+    return (
+        <SafeAreaView style={styles.container}>
+
+            <ScrollView container={styles.containerGallery}>
                 <FlatList
                     numColumns={1}
                     horizontal={false}
                     data={posts}
                     renderItem={({ item }) => (
-                        <View style={styles.containerImage}>
-                            <Text style={styles.container}>{item.user.name}</Text>
-                            <Image
-                                style={styles.image}
-                                source={{ uri: item.downloadURL }}
-                            />
-                            { item.currentUserLike ?
-                                (
-                                    <Button
-                                        title="Dislike"
-                                        onPress={() => onDislikePress(item.user.uid, item.id)} />
-                                )
-                                :
-                                (
-                                    <Button
-                                        title="Like"
-                                        onPress={() => onLikePress(item.user.uid, item.id)} />
-                                )
-                            }
-                            <Text
-                                onPress={() => props.navigation.navigate('Comment', 
-                                { postId: item.id, uid: item.user.uid })}
-                            >View Comments...</Text>
-                        </View>
+                        <Card style={styles.containerImage}>
+                            <Card.Title style={styles.container} title={item.user.name} left={() =>
+                                <Avatar.Image size={24} source={require('../assets/default-profile.svg')} />}>
+                            </Card.Title>
+                            <Card.Content>
+                                <Image
+                                    style={styles.image}
+                                    source={{ uri: item.downloadURL }}
+                                />
+                                <Caption>{item.caption}</Caption>
+                                <Card.Actions>
+                                    {item.currentUserLike ?
+                                        (
+                                            <Button
+                                                icon="heart"
+                                                color='red'
+                                                onPress={() => onDislikePress(item.user.uid, item.id)} />
+                                        )
+                                        :
+                                        (
+                                            <Button
+                                                icon="heart"
+                                                onPress={() => onLikePress(item.user.uid, item.id)} />
+                                        )
+                                    }
+
+                                </Card.Actions>
+                                <Text
+                                    onPress={() => props.navigation.navigate('Comment',
+                                        { postId: item.id, uid: item.user.uid })}
+                                >View Comments...</Text>
+                            </Card.Content>
+ 
+                        </Card>
                     )}
                 />
-            </View>
-        </View>
+            </ScrollView>
+        </SafeAreaView>
     )
 }
 
