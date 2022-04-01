@@ -1,17 +1,23 @@
 import React, { useState, useEffect } from 'react'
-import { View, Text, Image, FlatList, StyleSheet, Button } from 'react-native'
+import { View, Text, Image, FlatList, StyleSheet } from 'react-native'
 import { connect } from 'react-redux'
 import firebase from 'firebase'
+import { Avatar, Button, Card, HelperText, TextInput, Caption, FAB, Portal, Provider, Modal } from 'react-native-paper'
+import { CardStyleInterpolators } from '@react-navigation/stack'
+
 require('firebase/firestore')
 
 function Profile(props) {
     const [userPost, setUserPost] = useState([])
     const [user, setUser] = useState(null)
     const [following, setFollowing] = useState(false)
+    const [visible, setVisible] = React.useState(false);
+
+    const showModal = () => setVisible(true);
+    const hideModal = () => setVisible(false);
 
     useEffect(() => {
         const { currentUser, posts } = props;
-        console.log(currentUser)
         if (props.route.params.uid === firebase.auth().currentUser.uid) {
             setUser(currentUser)
             setUserPost(posts)
@@ -56,7 +62,9 @@ function Profile(props) {
         firebase.firestore
             .collection('users')
             .doc(props.route.params.uid)
-            .set(user)
+            .update(user).then(res => {
+                console.log(res)
+            })
     }
     const onFollow = () => {
 
@@ -83,48 +91,79 @@ function Profile(props) {
     }
     return (
         <View style={styles.container}>
-            <View style={styles.containerInfo}>
-                <Text>{user.name}</Text>
-                <Text>{user.email}</Text>
-                {/* <Button onPress={() => updateProfile()} title='Edit' /> */}
-                {props.route.params.uid !== firebase.auth().currentUser.uid ? (
-                    <View >
-                        {following ? (
-                            <Button
-                                title="Following"
-                                onPress={() => onUnfollow()}
-                            />
-                        ) :
-                            (
-                                <Button
-                                    title="Follow"
-                                    onPress={() => onFollow()}
+            <Provider>
+                <Portal>
+                    <Modal visible={visible} onDismiss={hideModal} contentContainerStyle={styles.modal}>
+                        <Card>
+                            <Card.Title title="Edit your profile" />
+                            <Card.Content>
+                                <TextInput
+                                    label="Username"
+                                    value={user.name}
+                                    onChangeText={text => user.name = text}
                                 />
+                                <TextInput
+                                    label="description"
+                                    value={user.description}
+                                    onChangeText={text => user.description = text}
+                                />
+                            </Card.Content>
+                            <Card.Actions>
+                                <Button icon='update' onPress={updateProfile}>Save</Button>
+                            </Card.Actions>
+                        </Card>
+                    </Modal>
+                </Portal>
+                <View style={styles.containerInfo}>
+                    <Card>
+                        <Card.Title title={user.name} subtitle={user.email} left={() =>
+                            <Avatar.Image size={64} source={require('../assets/default-profile.svg')} />
+                        } />
+                        <Text>{user.description}</Text>
+                        <Card.Content>
+                            <Button onPress={showModal} icon="edit" >Edit</Button>
+                            {props.route.params.uid !== firebase.auth().currentUser.uid ? (
+                                <View >
+                                    {following ? (
+                                        <Button
+                                            mode='contained'
+                                            onPress={() => onUnfollow()}
+                                        >Following</Button>
+                                    ) :
+                                        (
+                                            <Button
+                                                mode='contained'
+                                                onPress={() => onFollow()}
+                                            >Follow</Button>
 
-                            )}
-                    </View>
-                ) :
-                    <Button
-                        title="Logout"
-                        onPress={() => onLogout()}
-                    />}
-            </View>
+                                        )}
+                                </View>
+                            ) :
+                                <Button
+                                    mode='contained'
+                                    onPress={() => onLogout()}
+                                >Logout</Button>}
+                        </Card.Content>
+                    </Card>
+                </View>
 
-            <View style={styles.containerGallery}>
-                <FlatList
-                    numColumns={3}
-                    horizontal={false}
-                    data={userPost}
-                    renderItem={({ item }) => (
-                        <View style={styles.containerImage}>
-                            <Image
-                                style={styles.image}
-                                source={{ uri: item.downloadURL }}
-                            />
-                        </View>
-                    )}
-                />
-            </View>
+                <View style={styles.containerGallery}>
+                    <FlatList
+                        numColumns={3}
+                        horizontal={false}
+                        data={userPost}
+                        renderItem={({ item }) => (
+                            <View style={styles.containerImage}>
+                                <Image
+                                    style={styles.image}
+                                    source={{ uri: item.downloadURL }}
+                                />
+                            </View>
+                        )}
+                    />
+                </View>
+            </Provider>
+
         </View>
     )
 }
@@ -132,6 +171,7 @@ function Profile(props) {
 const styles = StyleSheet.create({
     container: {
         flex: 1,
+        marginTop: 25
     },
     containerInfo: {
         margin: 20
@@ -145,6 +185,10 @@ const styles = StyleSheet.create({
     image: {
         flex: 1,
         aspectRatio: 1 / 1
+    },
+    modal: {
+        backgroundColor: 'white',
+        padding: 20
     }
 })
 const mapStateToProps = (store) => ({
