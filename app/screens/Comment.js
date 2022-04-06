@@ -60,7 +60,7 @@ function Comment(props) {
         } else {
             matchUserToComment(comments)
         }
-    }, [props.route.params.postId, props.users])
+    }, [props.route.params.postId, props.users, comments])
 
     const onCommentSend = () => {
         if (text != '') {
@@ -200,19 +200,23 @@ function Comment(props) {
                 )}
             />
             <View >
-                <TextInput
-                    placeholder='Comment...'
-                    value={text}
-                    onChangeText={(text) => setText(text)}
-                    right={<TextInput.Icon name="send" onPress={() => onCommentSend()} />}
-                />
+                <View style={{ display: 'flex', flexDirection: 'row'}}>
+
+                    <TextInput
+                    style={{width: '90%'}}
+                        placeholder='Comment...'
+                        value={text}
+                        onChangeText={(text) => setText(text)}
+                        right={<TextInput.Icon name="send" onPress={() => onCommentSend()} />}
+                    />
+                    {showRecord ? <Button  icon="record" onPress={stopRecording} />
+                        :
+                        <Button style={{ felx: 1}} icon='microphone' onPress={startRecording} />
+                    }
+                </View>
                 <HelperText type="error" visible={hasErrors}>
                     Required field
                 </HelperText>
-                {showRecord ? <Button icon="record" onPress={stopRecording} />
-                    :
-                    <Button icon='microphone' onPress={startRecording} />
-                }
             </View>
         </SafeAreaView>
     )

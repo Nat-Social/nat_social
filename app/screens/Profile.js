@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react'
 import { View, Text, Image, FlatList, StyleSheet } from 'react-native'
 import { connect } from 'react-redux'
 import firebase from 'firebase'
-import { Avatar, Button, Card, HelperText, TextInput, Caption, FAB, Portal, Provider, Modal } from 'react-native-paper'
+import { Avatar, Button, Card, HelperText, TextInput, Caption, Menu, FAB, Portal, Provider, Modal, Divider } from 'react-native-paper'
 import { CardStyleInterpolators } from '@react-navigation/stack'
 
 require('firebase/firestore')
@@ -11,9 +11,14 @@ function Profile(props) {
     const [userPost, setUserPost] = useState([])
     const [user, setUser] = useState(null)
     const [following, setFollowing] = useState(false)
-    const [visible, setVisible] = React.useState(false);
+    const [visible, setVisible] = useState(false);
+    const [showMenu, setShowMenu] = useState(false);
+    const [loading, setLoading] = useState(false);
 
-    const showModal = () => setVisible(true);
+    const showModal = () => {
+        setVisible(true)
+        setShowMenu(false)
+    };
     const hideModal = () => setVisible(false);
 
     useEffect(() => {
@@ -59,11 +64,15 @@ function Profile(props) {
 
     const updateProfile = () => {
         // console.log(firebase.auth().currentUser)
-        firebase.firestore
+        setLoading(true)
+        firebase.firestore()
             .collection('users')
             .doc(props.route.params.uid)
             .update(user).then(res => {
-                console.log(res)
+                setLoading(false)
+                setVisible(false)
+            }, (error) => {
+                console.log(error)
             })
     }
     const onFollow = () => {
@@ -86,6 +95,9 @@ function Profile(props) {
     const onLogout = () => {
         firebase.auth().signOut();
     }
+    const openMenu = () => setShowMenu(true);
+
+    const closeMenu = () => setShowMenu(false);
     if (user == null) {
         return <View />
     }
@@ -109,19 +121,32 @@ function Profile(props) {
                                 />
                             </Card.Content>
                             <Card.Actions>
-                                <Button icon='update' onPress={updateProfile}>Save</Button>
+                                <Button loading={loading} onPress={updateProfile} mode='contained'>Save</Button>
+                                <Button onPress={() => setVisible(false)} mode='outlined'>Cancel</Button>
                             </Card.Actions>
                         </Card>
                     </Modal>
                 </Portal>
                 <View style={styles.containerInfo}>
-                    <Card>
-                        <Card.Title title={user.name} subtitle={user.email} left={() =>
+                    <Card >
+                        <Menu
+                            visible={showMenu}
+                            onDismiss={closeMenu}
+                            style={{ alignSelf: 'flex-end', width: 200 }}
+                            anchor={
+                                <Button onPress={openMenu} icon='menu' style={{ alignSelf: 'flex-end' }}
+                                    contentStyle={{ width: 5, height: 30, alignSelf: 'center' }} >
+                                </Button>
+                            }>
+                            <Menu.Item onPress={showModal} title="Edit" />
+                            <Divider />
+                            <Menu.Item onPress={() => onLogout()} title="Logout" titleStyle={{ color: 'red' }} icon='logout' />
+                        </Menu>
+                        <Card.Title title={user.name} subtitle={user.email} leftStyle={{marginEnd: 30}} left={() =>
                             <Avatar.Image size={64} source={require('../assets/default-profile.svg')} />
-                        } />
-                        <Text>{user.description}</Text>
+                        } subtitleNumberOfLines={3}/>
                         <Card.Content>
-                            <Button onPress={showModal} icon="edit" >Edit</Button>
+                            <Text>{user.description}</Text>
                             {props.route.params.uid !== firebase.auth().currentUser.uid ? (
                                 <View >
                                     {following ? (
@@ -139,10 +164,7 @@ function Profile(props) {
                                         )}
                                 </View>
                             ) :
-                                <Button
-                                    mode='contained'
-                                    onPress={() => onLogout()}
-                                >Logout</Button>}
+                                null}
                         </Card.Content>
                     </Card>
                 </View>
@@ -174,7 +196,7 @@ const styles = StyleSheet.create({
         marginTop: 25
     },
     containerInfo: {
-        margin: 20
+        margin: 10
     },
     containerGallery: {
         flex: 1,
