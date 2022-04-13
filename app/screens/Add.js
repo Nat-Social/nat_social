@@ -3,33 +3,41 @@ import { StyleSheet, Text, View, TouchableOpacity, Image } from 'react-native';
 import { Camera } from 'expo-camera';
 import * as ImagePicker from 'expo-image-picker';
 import { Button, IconButton } from 'react-native-paper';
-import Carousel from 'react-native-snap-carousel';
+import CustomCarousel from '../components/carousel/CustomCarousel';
 
-export default function Add({ navigation }) {
+
+function Add({ navigation }) {
     const [hasGalleryPermission, setHasGalleryPermission] = useState(null);
     const [hasCameraPermission, setHasCameraPermission] = useState(null);
     const [camera, setCamera] = useState(null);
-    const [image, setImage] = useState([]);
+    const [showCamera, setShowCamera] = useState(true);
+    const [images, setImages] = useState([]);
+    const [snapshot, setSnapshot] = useState(null);
     const [type, setType] = useState(Camera.Constants.Type.back);
+    const [flashMode, setFlashMode] = useState(Camera.Constants.FlashMode.off);
+    const [flashIcon, setFlashIcon] = useState('flash-off');
 
     useEffect(() => {
         (async () => {
             const cameraStatus = await Camera.requestCameraPermissionsAsync();
             setHasCameraPermission(cameraStatus.status === 'granted');
-
             const galleryStatus = await ImagePicker.requestMediaLibraryPermissionsAsync();
             setHasGalleryPermission(galleryStatus.status === 'granted');
             if (galleryStatus.status !== 'granted') {
                 alert('Sorry, we need camera roll permissions to make this work!');
             }
+            
         })();
+
     }, []);
 
     const takePicture = async () => {
+        setShowCamera(false)
         if (camera) {
-            const data = await camera.takePictureAsync(null)
-            setImage(image => [...image, ...data.uri])
-            console.log(image)
+            const data = await camera.takePictureAsync()
+            setImages(images => [...images, data.uri])
+            setSnapshot(data.uri)
+            // navigation.navigate('Save', { images })
         }
     }
 
@@ -43,7 +51,7 @@ export default function Add({ navigation }) {
 
         if (!result.cancelled) {
             console.log(result.uri)
-            setImage(image =>[...image, result.uri]);
+            setImages(images.push(result.uri));
         }
     };
 
@@ -54,25 +62,40 @@ export default function Add({ navigation }) {
         return <Text>No access to camera</Text>;
     }
 
-    const _renderItem = ({ item, index }) => {
 
-        return (
-            <View >
-                <Image source={{ uri: item }} style={{ flex: 1 }} />
-            </View>
-        );
-    }
     return (
         <View style={styles.container}>
 
-            {image.length == 0 &&
+            {images.length > 0 &&
+                <View style={styles.savePhotoContainer}>
+                    <CustomCarousel data={images} />
+                    <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'center' }}>
+                        <IconButton
+                            icon='close'
+                            color='white'
+                            onPress={() => setImages([])}
+                            style={styles.takePhoto}
+                            size={50}
+                        />
+                        <IconButton
+                            icon='comment'
+                            color='white'
+                            onPress={() => navigation.navigate('Save', { images })}
+                            style={styles.takePhoto}
+                            size={50}
+                        />
+                    </View>
+                </View>
+            }
+            {images.length == 0 &&
                 <View style={styles.cameraContainer}>
                     <Camera
                         ref={ref => setCamera(ref)}
                         style={styles.fixedRatio}
                         type={type}
-                        ratio={'16:9'} />
-                    <View style={styles.buttonContainer}>
+                        ratio={'1:1'} 
+                        flashMode={flashMode}/>
+                    <View View style={styles.buttonContainer}>
                         <IconButton
                             style={styles.button}
                             icon='camera-retake'
@@ -99,42 +122,23 @@ export default function Add({ navigation }) {
                             onPress={pickImage}
                             size={25}
                         />
+                        <IconButton
+                            icon={flashIcon}
+                            color='white'
+                            onPress={() => {
+                                setFlashMode( flashMode === Camera.Constants.FlashMode.off
+                                    ? Camera.Constants.FlashMode.on
+                                    : Camera.Constants.FlashMode.auto)
+                                    setFlashIcon( flashIcon === 'flash-off'
+                                    ? 'flash'
+                                    : 'flash-auto')
+                            }}
+                            size={25}
+                        />
                     </View>
                 </View>
             }
-            {image.length == 1 ?
-                <View style={styles.savePhotoContainer}>
-                    <IconButton
-                        icon='close'
-                        color='white'
-                        onPress={setImage([])}
-                        size={25}
-                        style={styles.savePhoto}
-                    />
-                    {image.map(i => <Image source={{ uri: i }} key={i} />)}
-
-                    <IconButton
-                        icon='content-save'
-                        color='white'
-                        onPress={() => navigation.navigate('Save', { image })}
-                        size={25}
-                        style={styles.savePhoto}
-                    />
-                </View>
-
-                :
-                <>
-                    {image.length > 1 &&
-                        <Carousel
-                            data={image}
-                            renderItem={_renderItem}
-                            sliderWidth={300}
-                            itemWidth={300}
-                            layout={'default'} />
-                    }
-                </>
-            }
-        </View>
+        </View >
     );
 }
 const styles = StyleSheet.create({
@@ -182,3 +186,4 @@ const styles = StyleSheet.create({
         color: 'white',
     },
 });
+export default Add;
