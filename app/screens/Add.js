@@ -1,16 +1,18 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { StyleSheet, Text, View, TouchableOpacity, Image } from 'react-native';
 import { Camera } from 'expo-camera';
 import * as ImagePicker from 'expo-image-picker';
 import { Button, IconButton } from 'react-native-paper';
 import CustomCarousel from '../components/carousel/CustomCarousel';
+import { MediaType } from 'expo-media-library';
+import CustomAssetsSelector from '../components/assetsSelector/CustomAssetsSelector';
 
 
 function Add({ navigation }) {
     const [hasGalleryPermission, setHasGalleryPermission] = useState(null);
     const [hasCameraPermission, setHasCameraPermission] = useState(null);
     const [camera, setCamera] = useState(null);
-    const [showCamera, setShowCamera] = useState(true);
+    const [showGallery, setShowGallery] = useState(false);
     const [images, setImages] = useState([]);
     const [snapshot, setSnapshot] = useState(null);
     const [type, setType] = useState(Camera.Constants.Type.back);
@@ -26,13 +28,12 @@ function Add({ navigation }) {
             if (galleryStatus.status !== 'granted') {
                 alert('Sorry, we need camera roll permissions to make this work!');
             }
-            
+
         })();
 
     }, []);
 
     const takePicture = async () => {
-        setShowCamera(false)
         if (camera) {
             const data = await camera.takePictureAsync()
             setImages(images => [...images, data.uri])
@@ -47,11 +48,12 @@ function Add({ navigation }) {
             allowsEditing: true,
             aspect: [1, 1],
             quality: 1,
+            allowsMultipleSelection: true
         });
 
         if (!result.cancelled) {
             console.log(result.uri)
-            setImages(images.push(result.uri));
+            setImages(images => [...images, result.uri]);
         }
     };
 
@@ -61,8 +63,7 @@ function Add({ navigation }) {
     if (setHasCameraPermission === false || setHasGalleryPermission === false) {
         return <Text>No access to camera</Text>;
     }
-
-
+  
     return (
         <View style={styles.container}>
 
@@ -93,8 +94,8 @@ function Add({ navigation }) {
                         ref={ref => setCamera(ref)}
                         style={styles.fixedRatio}
                         type={type}
-                        ratio={'1:1'} 
-                        flashMode={flashMode}/>
+                        ratio={'1:1'}
+                        flashMode={flashMode} />
                     <View View style={styles.buttonContainer}>
                         <IconButton
                             style={styles.button}
@@ -119,23 +120,24 @@ function Add({ navigation }) {
                         <IconButton
                             icon='camera-burst'
                             color='white'
-                            onPress={pickImage}
+                            onPress={() => setShowGallery(true)}
                             size={25}
                         />
                         <IconButton
                             icon={flashIcon}
                             color='white'
                             onPress={() => {
-                                setFlashMode( flashMode === Camera.Constants.FlashMode.off
+                                setFlashMode(flashMode === Camera.Constants.FlashMode.off
                                     ? Camera.Constants.FlashMode.on
                                     : Camera.Constants.FlashMode.auto)
-                                    setFlashIcon( flashIcon === 'flash-off'
+                                setFlashIcon(flashIcon === 'flash-off'
                                     ? 'flash'
                                     : 'flash-auto')
                             }}
                             size={25}
                         />
                     </View>
+                    {showGallery && <CustomAssetsSelector />}
                 </View>
             }
         </View >

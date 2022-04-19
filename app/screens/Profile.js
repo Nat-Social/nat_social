@@ -134,8 +134,8 @@ function Profile(props) {
                             onDismiss={closeMenu}
                             style={{ alignSelf: 'flex-end', width: 200 }}
                             anchor={
-                                <Button onPress={openMenu} icon='menu' style={{ alignSelf: 'flex-end' }}
-                                    contentStyle={{ width: 5, height: 30, alignSelf: 'center' }} >
+                                <Button onPress={openMenu} icon='menu' style={{ alignSelf: 'flex-end' }} compact={true}
+                                    contentStyle={{ width: 50, height: 30, alignSelf: 'center' }} >
                                 </Button>
                             }>
                             <Menu.Item onPress={showModal} title="Edit" />

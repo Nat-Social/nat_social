@@ -1,7 +1,7 @@
 import React, { Component } from 'react'
 import { connect } from 'react-redux'
 import { bindActionCreators } from 'redux'
-import { fetchUser, fetchUserPosts, fetchUsersFollowing, clearData} from '../redux/actions'
+import { fetchUser, fetchUserPosts, fetchUsersFollowing, clearData } from '../redux/actions'
 import { Text, View } from 'react-native'
 import { NavigationContainer } from '@react-navigation/native'
 import { MaterialCommunityIcons } from '@expo/vector-icons'
@@ -19,6 +19,7 @@ const EmptyScreen = () => {
     return (null)
 }
 export class Main extends Component {
+
     componentDidMount() {
         this.props.clearData();
         this.props.fetchUser();
@@ -28,18 +29,33 @@ export class Main extends Component {
 
     render() {
         return (
-            <Tab.Navigator initialRouteName="Feed" labeled={false}>
+            <Tab.Navigator initialRouteName="Feed" labeled={false} screenOptions={({ route }) => ({
+                tabBarIcon: ({ focused, color, size }) => {
+                    let iconName;
+                    switch (route.name) {
+                        case 'Feed':
+                            iconName = 'home'
+                            break;
+                        case 'Search':
+                            iconName = 'magnify'
+                            break
+                        case 'MainAdd':
+                            iconName = 'plus-circle-outline'
+                            break
+                        case 'Profile':
+                            iconName = 'account'
+                            break
+                    }
+
+                    // You can return any component that you like here!
+                    return <MaterialCommunityIcons name={iconName} color={focused ? 'purple' : '#FFFFFF'} size={26} />;
+                }
+            })}>
                 <Tab.Screen name="Feed" component={FeedScreen} options={{
-                    tabBarIcon: (({ color, size }) =>
-                        <MaterialCommunityIcons name="home" color={color} size={26} />
-                    ),
                     headerShown: false
                 }}></Tab.Screen>
                 <Tab.Screen name="Search" component={SearchScreen} navigation={this.props.navigation}
                     options={{
-                        tabBarIcon: (({ color, size }) =>
-                            <MaterialCommunityIcons name="magnify" color={color} size={26} />
-                        ),
                         headerShown: false
                     }}></Tab.Screen>
                 <Tab.Screen name="MainAdd" component={EmptyScreen}
@@ -50,24 +66,17 @@ export class Main extends Component {
                         }
                     })}
                     options={{
-                        tabBarIcon: (({ color, size }) =>
-                            <MaterialCommunityIcons name="plus-circle-outline" color={color} size={26} />
-                        ),
                         headerShown: false
                     }}></Tab.Screen>
                 <Tab.Screen name="Profile"
                     listeners={({ navigation }) => ({
                         tabPress: event => {
                             event.preventDefault();
-                            console.log(firebase.auth().currentUser.uid)
                             navigation.navigate("Profile", { uid: firebase.auth().currentUser.uid })
                         }
                     })}
                     component={ProfileScreen}
                     options={{
-                        tabBarIcon: (({ color, size }) =>
-                            <MaterialCommunityIcons name="account" color={color} size={26} />
-                        ),
                         headerShown: false
                     }}></Tab.Screen>
             </Tab.Navigator>

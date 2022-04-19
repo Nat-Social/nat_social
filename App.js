@@ -1,11 +1,11 @@
-import { NavigationContainer } from '@react-navigation/native';
-import React, {Component} from 'react';
+import { NavigationContainer, DarkTheme } from '@react-navigation/native';
+import React, { Component } from 'react';
 import { StyleSheet, Text, View } from 'react-native';
 import firebase from 'firebase';
 import AppNavigator from './app/navigation/AppNavigator';
 import firebaseConfig from './app/config/firebase';
 import { Provider } from 'react-redux';
-import {createStore, applyMiddleware} from 'redux'
+import { createStore, applyMiddleware } from 'redux'
 import rootReducer from './app/redux/reducers'
 import thunk from 'redux-thunk';
 import 'react-native-gesture-handler';
@@ -15,8 +15,10 @@ import MainNavigator from './app/navigation/MainNavigator';
 const store = createStore(rootReducer, applyMiddleware(thunk))
 
 const app = firebase.initializeApp(firebaseConfig);
+
+
 export class App extends Component {
-  constructor(props){
+  constructor(props) {
     super(props);
     this.state = {
       loaded: false,
@@ -24,12 +26,12 @@ export class App extends Component {
   }
   componentDidMount() {
     firebase.auth().onAuthStateChanged((user) => {
-      if(!user){
+      if (!user) {
         this.setState({
           loggedIn: false,
           loaded: true,
         })
-      }else {
+      } else {
         this.setState({
           loggedIn: true,
           loaded: true
@@ -39,27 +41,27 @@ export class App extends Component {
   }
   render() {
     const { loggedIn, loaded } = this.state;
-    if(!loaded){
-      return(
+    if (!loaded) {
+      return (
         <View>
           <Text>Loading</Text>
         </View>
       )
     }
 
-    if(!loggedIn){
+    if (!loggedIn) {
       return (
         <NavigationContainer>
-          <AppNavigator/>
+          <AppNavigator />
         </NavigationContainer>
       );
     }
 
-    return(
-      <Provider store={store}>
-        <NavigationContainer>
-          <MainNavigator navigation={this.props.navigation}/>
-        </NavigationContainer>
+    return (
+      <Provider store={store} >
+          <NavigationContainer theme={DarkTheme}>
+            <MainNavigator navigation={this.props.navigation} />
+          </NavigationContainer>
       </Provider>
     )
   }

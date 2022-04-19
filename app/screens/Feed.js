@@ -3,9 +3,11 @@ import { View, Text, Image, FlatList, StyleSheet, SafeAreaView, ScrollView } fro
 import { connect } from 'react-redux'
 import firebase from 'firebase'
 import { Avatar, Button, Card, Caption, FAB, Portal, Provider } from 'react-native-paper'
+import { useTheme } from '@react-navigation/native';
 require('firebase/firestore')
 
 function Feed(props) {
+    const { colors } = useTheme();
     const [posts, setPosts] = useState([])
     const [state, setState] = useState({ open: false });
 
@@ -51,8 +53,8 @@ function Feed(props) {
                     data={posts}
                     renderItem={({ item }) => (
                         <Card style={styles.containerImage}>
-                            <Card.Title style={styles.container} title={item.user.name} left={() =>
-                                <Avatar.Image size={24} source={require('../assets/default-profile.svg')} />}>
+                            <Card.Title style={styles.container} title={item.user.name} titleStyle={styles.cardTitle} left={() =>
+                                <Avatar.Image size={40} source={require('../assets/default-profile.svg')} />}>
                             </Card.Title>
                             <Card.Content>
                                 <Image
@@ -72,12 +74,13 @@ function Feed(props) {
                                         (
                                             <Button
                                                 icon="heart"
+                                                color='#ffffff'
                                                 onPress={() => onLikePress(item.user.uid, item.id)} />
                                         )
                                     }
 
                                 </Card.Actions>
-                                <Text
+                                <Text style={{color: '#ffffff'}}
                                     onPress={() => props.navigation.navigate('Comment',
                                         { postId: item.id, uid: item.user.uid })}
                                 >View Comments...</Text>
@@ -94,6 +97,7 @@ function Feed(props) {
 const styles = StyleSheet.create({
     container: {
         flex: 1,
+        marginTop: 25
     },
     containerInfo: {
         margin: 20
@@ -102,7 +106,11 @@ const styles = StyleSheet.create({
         flex: 1,
     },
     containerImage: {
-        flex: 1
+        flex: 1,
+        backgroundColor: '#000000'
+    },
+    cardTitle: {
+        color: '#ffffff'
     },
     image: {
         flex: 1,
