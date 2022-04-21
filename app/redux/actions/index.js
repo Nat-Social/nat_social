@@ -53,6 +53,26 @@ export function fetchUserPosts() {
     }
 }
 
+export function fetchUserPostsLikes(postId, userId) {
+    return (dispatch) => {
+         firebase.firestore()
+        .collection("post")
+        .doc(userId)
+        .collection('userPost')
+        .doc(postId)
+        .collection('likes')
+        .get()
+        .then((snapshot) => {
+            let _likes = snapshot.docs.map(doc => {
+                const data = doc.data();
+                const id = doc.id
+                return { id, ...data }
+            })
+            dispatch({ type: USERS_POSTS_STATE_CHANGE, posts, uid })
+        })
+    }
+}
+
 export function fetchUsersFollowing() {
     return (dispatch) => {
         firebase.firestore()
@@ -108,7 +128,6 @@ export function fetchUsersFollowingPosts(uid) {
             .then((snapshot) => {
                 const uid = snapshot.query._delegate._query.T.path.segments[1];
                 const user = getState().usersState.users.find(el => el.uid === uid)
-
                 let posts = snapshot.docs.map(doc => {
                     const data = doc.data();
                     const id = doc.id
@@ -119,6 +138,7 @@ export function fetchUsersFollowingPosts(uid) {
                     dispatch(fetchUsersFollowingLikes(uid, posts[i].id))
                     dispatch(fetchUsersFollowingComments(uid, posts[i].id))
                 }
+                // console.log(posts)
                 dispatch({ type: USERS_POSTS_STATE_CHANGE, posts, uid })
             })
     }
@@ -135,7 +155,7 @@ export function fetchUsersFollowingLikes(uid, postId) {
             .doc(firebase.auth().currentUser.uid)
             .onSnapshot((snapshot) => {
                 let postId = null
-                if (snapshot._delegate._document){
+                if (snapshot._delegate._document) {
                     postId = snapshot._delegate._document.key.path.segments[3];
                 }
                 let currentUserLike = false
@@ -158,7 +178,7 @@ export function fetchUsersFollowingComments(uid, postId) {
             .doc(firebase.auth().currentUser.uid)
             .onSnapshot((snapshot) => {
                 let postId = null
-                if (snapshot._delegate._document){
+                if (snapshot._delegate._document) {
                     postId = snapshot._delegate._document.key.path.segments[3];
                 }
                 let currentUserComent = false
